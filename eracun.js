@@ -74,7 +74,7 @@ streznik.get('/', function(zahteva, odgovor) {
   else {
     odgovor.redirect('/prijava')
   }
-})
+});
 
 // Dodajanje oz. brisanje pesmi iz košarice
 streznik.get('/kosarica/:idPesmi', function(zahteva, odgovor) {
