@@ -27,6 +27,7 @@ streznik.use(
 );
 
 var sejSpr = false;
+var customerID;
 var razmerje_usd_eur = 0.877039116;
 
 function davcnaStopnja(izvajalec, zanr) {
@@ -75,6 +76,8 @@ streznik.get('/', function(zahteva, odgovor) {
     odgovor.redirect('/prijava')
   }
 });
+
+
 
 // Dodajanje oz. brisanje pesmi iz košarice
 streznik.get('/kosarica/:idPesmi', function(zahteva, odgovor) {
@@ -169,13 +172,14 @@ streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
             odgovor.render('eslog',{
               vizualiziraj: true,
               postavkeRacuna: pesem,
-              customer: stranka1
+              customer: stranka1,
+              ID: 0
             });
           });
         });
       }
       catch(err){
-        //console.log(err);
+        console.log(err);
       }
   });
 });
@@ -183,20 +187,27 @@ streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
 
 // Izpis računa v HTML predstavitvi ali izvorni XML obliki
 streznik.get('/izpisiRacun/:oblika', function(zahteva, odgovor) {
-  pesmiIzKosarice(zahteva, function(pesmi) {
-    if (!pesmi) {
-      odgovor.sendStatus(500);
-    } else if (pesmi.length == 0) {
-      odgovor.send("<p>V košarici nimate nobene pesmi, \
-        zato računa ni mogoče pripraviti!</p>");
-    } else {
-      odgovor.setHeader('content-type', 'text/xml');
-      odgovor.render('eslog', {
-        vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
-        postavkeRacuna: pesmi
-      })  
-    }
-  })
+   
+  if (sejSpr){
+    vrniStranke(function (napaka ,vseStranke){
+      pesmiIzKosarice(zahteva, function(pesmi) {
+        if (!pesmi) {
+          odgovor.sendStatus(500);
+        } else if (pesmi.length == 0) {
+          odgovor.send("<p>V košarici nimate nobene pesmi, \
+            zato računa ni mogoče pripraviti!</p>");
+        } else {
+          odgovor.setHeader('content-type', 'text/xml');
+          odgovor.render('eslog', {
+            vizualiziraj: zahteva.params.oblika == 'html' ? true : false,
+            postavkeRacuna: pesmi,
+            customer: vseStranke,
+            ID: customerID-1
+          })
+        }
+      })
+    })
+  }
 })
 
 // Privzeto izpiši račun v HTML obliki
@@ -277,15 +288,15 @@ streznik.post('/stranka', function(zahteva, odgovor) {
   var form = new formidable.IncomingForm();
   
   form.parse(zahteva, function (napaka1, polja, datoteke) {
-    zahteva.session.izbranaStranka = polja.seznamStrank;
+    customerID = polja.seznamStrank;
     odgovor.redirect('/')
   });
 })
 
 // Odjava stranke
 streznik.post('/odjava', function(zahteva, odgovor) {
+  sejSpr = false;
   zahteva.session.izbranaStranka = null;
-    sejSpr = false;
     odgovor.redirect('/prijava') 
 })
 
