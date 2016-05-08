@@ -166,7 +166,7 @@ streznik.post('/izpisiRacunBaza', function(zahteva, odgovor) {
         });
       }
       catch(err){
-        console.log(err);
+        //console.log(err);
       }
   });
 });
